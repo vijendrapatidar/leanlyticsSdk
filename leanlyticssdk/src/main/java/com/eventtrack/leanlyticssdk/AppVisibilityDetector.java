@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.util.List;
 
@@ -151,8 +152,9 @@ public final class AppVisibilityDetector {
 
         @Override
         public void onActivityDestroyed(Activity activity) {
-
+            Log.d("StartTime","onActivityDestroyed");
             sHandler.sendEmptyMessage(MSG_FINISHAPP);
         }
     }
+
 }

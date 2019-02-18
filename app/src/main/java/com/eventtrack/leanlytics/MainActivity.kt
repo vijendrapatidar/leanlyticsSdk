@@ -1,11 +1,13 @@
 package com.eventtrack.leanlytics
 
 import android.Manifest
+import android.content.Intent
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
 import com.eventtrack.leanlyticssdk.LeanlyticsAnalytics
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -17,9 +19,9 @@ class MainActivity : AppCompatActivity() {
 
         val rootView = findViewById<ConstraintLayout>(R.id.mainLayout)
         LeanlyticsAnalytics.initInstance()
-        LeanlyticsAnalytics.getInstance().start(application)
-
+        LeanlyticsAnalytics.getInstance().start(application,"OkRcYmRk1")
+        tvDistance.setOnClickListener { startActivity(Intent(this@MainActivity,TestActivity::class.java)) }
 //        LeanlyticsAnalytics.initInstance(applicationContext)
-//        LeanlyticsAnalytics.getInstance().uploadScreenShot(true, rootView)
+      //  LeanlyticsAnalytics.getInstance().getScreenShot(this.window.decorView.rootView)
     }
 }

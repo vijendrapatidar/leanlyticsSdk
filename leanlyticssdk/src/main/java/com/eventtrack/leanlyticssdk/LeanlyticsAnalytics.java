@@ -1,23 +1,26 @@
 package com.eventtrack.leanlyticssdk;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Environment;
+import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 public class LeanlyticsAnalytics {
     private static final String TAG = "LeanlyticsAnalytics";
     private static LeanlyticsAnalytics instance;
+    private boolean isTimerStart;
 
     public static LeanlyticsAnalytics getInstance() {
         return instance;
@@ -27,53 +30,77 @@ public class LeanlyticsAnalytics {
         instance = new LeanlyticsAnalytics();
     }
 
-    public void uploadScreenShot(boolean isUpload, View view) {
-        Bitmap screenshot = null;
-        try {
-            if (view != null) {
-                int spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-                view.measure(spec, spec);
-                view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
-                screenshot = Bitmap.createBitmap(view.getMeasuredWidth(), view.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(screenshot);
-//                view.draw(canvas);
-            }
+    public int totalTimeDuration = 0;
+    public String startTime;
+    public String endTime;
+    public Application application;
+    public String androidDeviceId;
+    public String appId;
+    private SimpleDateFormat dateFormat;
 
-        } catch (Exception e) {
-            Log.d("ScreenShotActivity", "Failed to capture screenshot because:" + e.getMessage());
-        }
-    }
+    public void start(Application app, String appId) {
 
+        @SuppressLint("HardwareIds") String android_id = Settings.Secure.getString(app.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        createAppSession(app, android_id, appId);
+        this.androidDeviceId = android_id;
+        this.appId = appId;
+        this.application = app;
+        dateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
+        this.startTime = dateFormat.format(new Date());
 
-    public void start(Application app) {
-        createAppSession(app);
-
+        Log.d("DeviceId", "" + android_id);
+        app.startService(new Intent(app, PostTimeService.class));
+        //PostTimeService postTimeService=new PostTimeService(startTimeValue);
         AppVisibilityDetector.init(app, new AppVisibilityDetector.AppVisibilityCallback() {
             @Override
             public void onAppGotoForeground() {
+                startTime();
+                isTimerStart = true;
+                Log.d("StartTime Foreg", "" + totalTimeDuration);
                 Log.e(TAG, "onAppGotoForeground: ");
             }
 
             @Override
             public void onAppGotoBackground() {
+                startTime();
+                isTimerStart = false;
+                endTime = dateFormat.format(new Date());
+                Log.d("StartTime Backgr", "" + totalTimeDuration);
                 Log.e(TAG, "onAppGotoBackground: ");
             }
 
             @Override
             public void onAppFinish() {
 
+                Log.d("StartTime onAppFinish", "" + totalTimeDuration);
+
+//                startTime(false);
             }
         });
 
     }
 
 
-    private void createAppSession(Application app) {
+    private void startTime() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (isTimerStart) {
+                    totalTimeDuration++;
+                    startTime();
+                }
+            }
+        }, 1000);
+    }
+
+
+    private void createAppSession(Application app, String androidId, String appId) {
         HashMap<String, String> hm = new HashMap<>();
-        hm.put("applicationId", "OkRcYmRk1");
-        hm.put("deviceId", "OkRcYmRk1dgdfg");
-        hm.put("deviceType", "Android Pixel 2");
-        hm.put("deviceOs", "Android");
+        hm.put("applicationId", appId);
+        hm.put("deviceId", androidId);
+        hm.put("deviceType", "Android");
+        hm.put("deviceOs", "Android 8.1");
         hm.put("deviceModel", "BND-LS");
         hm.put("location", "India");
         new WebServiceForPost(app, "http://159.89.164.34:4100/api/v1/users/create", hm, new OnTaskDoneListener() {
@@ -87,66 +114,9 @@ public class LeanlyticsAnalytics {
                 Log.e(TAG, "onTaskDone: error");
             }
         }).execute();
-//        performPostCall("http://159.89.164.34:4100/api/v1/users/create", hm);
     }
 
-    public String performPostCall(String requestURL,
-                                  HashMap<String, String> postDataParams) {
-        URL url;
-        String response = "";
-        try {
-            url = new URL(requestURL);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(15000);
-            conn.setConnectTimeout(15000);
-            conn.setRequestMethod("POST");
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-
-            OutputStream os = conn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(
-                    new OutputStreamWriter(os, "UTF-8"));
-            writer.write(getPostDataString(postDataParams));
-
-            writer.flush();
-            writer.close();
-            os.close();
-            int responseCode = conn.getResponseCode();
-
-            if (responseCode == HttpsURLConnection.HTTP_OK) {
-                String line;
-                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                while ((line = br.readLine()) != null) {
-                    response += line;
-                }
-            } else {
-                response = "";
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return response;
-    }
-
-    private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
-        StringBuilder result = new StringBuilder();
-        boolean first = true;
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            if (first)
-                first = false;
-            else
-                result.append("&");
-
-            result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
-            result.append("=");
-            result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
-        }
-
-        return result.toString();
-    }
-
-    public static void store(Bitmap bm, String fileName) {
+    public void store(Bitmap bm, String fileName) {
         if (!(bm.getWidth() == 0 && bm.getHeight() == 0)) {
             final String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Screenshots";
             File dir = new File(dirPath);
@@ -164,15 +134,11 @@ public class LeanlyticsAnalytics {
         }
     }
 
-    public static Bitmap getScreenShot(View view) {
-//        View screenView = view.getRootView();
-//        screenView.setDrawingCacheEnabled(true);
-//        Bitmap bitmap = Bitmap.createBitmap(screenView.getDrawingCache());
-//        screenView.setDrawingCacheEnabled(false);
-        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(),
-                view.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        view.draw(canvas);
+    public Bitmap getScreenShot(View view) {
+        view.setDrawingCacheEnabled(true);
+        view.buildDrawingCache(true);
+        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache(),0,0,720,1280);
+        view.setDrawingCacheEnabled(false);
         return bitmap;
     }
 }
