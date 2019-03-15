@@ -60,10 +60,10 @@ public class PostTimeService extends Service {
         hm.put("start_time", startTime);
         hm.put("end_time", endTime);
         hm.put("duration", String.valueOf(totalTimeDuration));
-        new WebServiceForPost(app, " http://159.89.164.34:4100/api/v1/users/session/create", hm, new OnTaskDoneListener() {
+        new WebServiceForPost(app, "http://159.89.164.34:4100/api/v1/users/session/create", hm, new OnTaskDoneListener() {
             @Override
             public void onTaskDone(String responseData) {
-                Log.e(TAG, "onTaskDone: " + responseData);
+                Log.e(TAG, "onTaskDone: Sagar" + responseData);
             }
 
             @Override

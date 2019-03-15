@@ -1,10 +1,15 @@
 package com.eventtrack.leanlyticssdk;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Application;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.Settings;
@@ -72,13 +77,41 @@ public class LeanlyticsAnalytics {
 
             @Override
             public void onAppFinish() {
-
                 Log.d("StartTime onAppFinish", "" + totalTimeDuration);
-
 //                startTime(false);
             }
         });
 
+        ActivityManager am = (ActivityManager) application.getSystemService(Context.ACTIVITY_SERVICE);
+        ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
+
+        try {
+            final Context otherAppContext = application.getApplicationContext().createPackageContext(cn.getPackageName(),
+                    Context.CONTEXT_IGNORE_SECURITY |
+                            Context.CONTEXT_INCLUDE_CODE);
+
+            //View rootView = ((Activity)otherAppContext).findViewById(android.R.id.content).getRootView();
+
+            Log.e("root view", ""+otherAppContext);
+           /* new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    View view = ((Activity) otherAppContext.getApplicationContext()).getWindow().getDecorView().getRootView();
+                    takeScreenshot(view);
+                }
+            }, 2000);*/
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private ActivityInfo tryGetActivity(ComponentName componentName) {
+        try {
+            return application.getApplicationContext().getPackageManager().getActivityInfo(componentName, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
     }
 
 
@@ -134,11 +167,24 @@ public class LeanlyticsAnalytics {
         }
     }
 
-    public Bitmap getScreenShot(View view) {
+//    public Bitmap getScreenShot(View view) {
+//        view.setDrawingCacheEnabled(true);
+//        view.buildDrawingCache(true);
+//        Log.e("screen shot bitmap", "" + view.getDrawingCache());
+//        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache(), 0, 0, 720, 1280);
+//        view.setDrawingCacheEnabled(false);
+//        return bitmap;
+//    }
+
+    public Bitmap takeScreenshot(View view) {
         view.setDrawingCacheEnabled(true);
-        view.buildDrawingCache(true);
-        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache(),0,0,720,1280);
+        view.buildDrawingCache();
+        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
+        view.destroyDrawingCache();
         view.setDrawingCacheEnabled(false);
+
+        Log.e("bitmap", "" + bitmap);
+
         return bitmap;
     }
 }
