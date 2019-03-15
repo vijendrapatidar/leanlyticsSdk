@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
 
         LeanlyticsAnalytics.initInstance()
-        LeanlyticsAnalytics.getInstance().start(this, application, "OkRcYmRk1")
+        LeanlyticsAnalytics.getInstance().start(application, "OkRcYmRk1")
         tvDistance.setOnClickListener { startActivity(Intent(this@MainActivity, TestActivity::class.java)) }
 
         //LeanlyticsAnalytics.initInstance(applicationContext)

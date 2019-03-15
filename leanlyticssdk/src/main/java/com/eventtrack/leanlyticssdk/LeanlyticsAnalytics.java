@@ -3,7 +3,6 @@ package com.eventtrack.leanlyticssdk;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Environment;
@@ -47,7 +46,7 @@ public class LeanlyticsAnalytics {
         instance = new LeanlyticsAnalytics();
     }
 
-    public void start(final Context context, Application app, String appId) {
+    public void start(Application app, String appId) {
         classes = new ArrayList<>();
 
         @SuppressLint("HardwareIds") String android_id = Settings.Secure.getString(app.getContentResolver(),
@@ -134,6 +133,7 @@ public class LeanlyticsAnalytics {
                 if (isTimerStart) {
                     View view = mActivity.getWindow().getDecorView().getRootView();
                     takeScreenshot(view);
+                    startTakingScreenShot();
                 }
             }
         }, 1000);
