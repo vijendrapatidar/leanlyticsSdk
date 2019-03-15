@@ -20,26 +20,11 @@ class MainActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
 
         LeanlyticsAnalytics.initInstance()
-        LeanlyticsAnalytics.getInstance().start(application, "OkRcYmRk1")
+        LeanlyticsAnalytics.getInstance().start(this, application, "OkRcYmRk1")
         tvDistance.setOnClickListener { startActivity(Intent(this@MainActivity, TestActivity::class.java)) }
 
         //LeanlyticsAnalytics.initInstance(applicationContext)
         //LeanlyticsAnalytics.getInstance().takeScreenshot(this.window.decorView.rootView)
 
-        //Handler().postDelayed(Runnable { takeScreenshot(rootView) },2000)
-
     }
-
-    private fun takeScreenshot(view: View): Bitmap {
-        val v1 = window.decorView.rootView
-        v1.isDrawingCacheEnabled = true
-        v1.buildDrawingCache()
-        val bitmap = Bitmap.createBitmap(v1.drawingCache)
-        v1.destroyDrawingCache()
-        v1.isDrawingCacheEnabled = false
-
-        Log.e("bitmap", "" + bitmap)
-        return bitmap
-    }
-
 }

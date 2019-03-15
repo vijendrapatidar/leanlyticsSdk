@@ -105,6 +105,8 @@ public final class AppVisibilityDetector {
         void onAppGotoBackground();
 
         void onAppFinish();
+
+        void sendActivity(Activity activity);
     }
 
     private static class AppActivityLifecycleCallbacks implements ActivityLifecycleCallbacks {
@@ -123,6 +125,8 @@ public final class AppVisibilityDetector {
                 sHandler.sendEmptyMessage(MSG_GOTO_FOREGROUND);
             }
             activityDisplayCount++;
+
+            sAppVisibilityCallback.sendActivity(activity);
         }
 
         @Override
@@ -152,7 +156,7 @@ public final class AppVisibilityDetector {
 
         @Override
         public void onActivityDestroyed(Activity activity) {
-            Log.d("StartTime","onActivityDestroyed");
+            Log.d("StartTime", "onActivityDestroyed");
             sHandler.sendEmptyMessage(MSG_FINISHAPP);
         }
     }
