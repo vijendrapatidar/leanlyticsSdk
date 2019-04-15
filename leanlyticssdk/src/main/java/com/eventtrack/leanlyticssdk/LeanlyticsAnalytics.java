@@ -31,8 +31,8 @@ import java.util.HashMap;
 
 public class LeanlyticsAnalytics {
 
-    //static String baseUrl = "http://192.168.1.137:3001/";
-    public static String baseUrl = "http://13.56.140.11:3001/";
+    static String baseUrl = "http://192.168.1.137:3001/";
+    //public static String baseUrl = "http://13.56.140.11:3001/";
 
     private final String TAG = "Leanlytics";
     private static LeanlyticsAnalytics instance;
