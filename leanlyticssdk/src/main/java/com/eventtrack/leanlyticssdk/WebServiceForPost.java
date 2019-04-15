@@ -1,6 +1,5 @@
 package com.eventtrack.leanlyticssdk;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -14,13 +13,11 @@ import java.util.Map;
 
 public class WebServiceForPost extends AsyncTask<String, Void, String> {
 
-    private Context mContext;
     private OnTaskDoneListener onTaskDoneListener;
     private String urlStr = "";
-    private HashMap<String, String> hm;
+    private HashMap<String, Object> hm;
 
-    public WebServiceForPost(Context context, String url, HashMap<String, String> hm, OnTaskDoneListener onTaskDoneListener) {
-        this.mContext = context;
+    public WebServiceForPost(String url, HashMap<String, Object> hm, OnTaskDoneListener onTaskDoneListener) {
         this.urlStr = url;
         this.onTaskDoneListener = onTaskDoneListener;
         this.hm = hm;
@@ -37,9 +34,9 @@ public class WebServiceForPost extends AsyncTask<String, Void, String> {
             HttpURLConnection httpConnection = (HttpURLConnection) mUrl.openConnection();
             httpConnection.setRequestMethod("POST");
             httpConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            httpConnection.setRequestProperty( "charset", "utf-8");
-            httpConnection.setRequestProperty( "Content-Length", Integer.toString( postDataLength ));
-            httpConnection.setUseCaches( false );
+            httpConnection.setRequestProperty("charset", "utf-8");
+            httpConnection.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+            httpConnection.setUseCaches(false);
             httpConnection.setConnectTimeout(100000);
             httpConnection.setReadTimeout(100000);
             httpConnection.setDoOutput(true);
@@ -86,10 +83,10 @@ public class WebServiceForPost extends AsyncTask<String, Void, String> {
             onTaskDoneListener.onError();
     }
 
-    private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
+    private String getPostDataString(HashMap<String, Object> params) throws UnsupportedEncodingException {
         StringBuilder result = new StringBuilder();
         boolean first = true;
-        for (Map.Entry<String, String> entry : params.entrySet()) {
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
             if (first)
                 first = false;
             else
@@ -97,7 +94,7 @@ public class WebServiceForPost extends AsyncTask<String, Void, String> {
 
             result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
             result.append("=");
-            result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+            result.append(URLEncoder.encode(entry.getValue().toString(), "UTF-8"));
         }
 
         return result.toString();
