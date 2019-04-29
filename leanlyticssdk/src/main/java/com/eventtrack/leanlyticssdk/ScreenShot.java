@@ -1,13 +1,15 @@
 package com.eventtrack.leanlyticssdk;
 
+import android.graphics.Bitmap;
+
 import java.util.HashMap;
 
 public class ScreenShot {
     private String className;
-    private String file;
+    private Bitmap  file;
     private HashMap<String, String> screenShotData;
 
-    public ScreenShot(String className, String file, HashMap<String, String> hashMap) {
+    public ScreenShot(String className, Bitmap  file, HashMap<String, String> hashMap) {
         this.className = className;
         this.file = file;
         this.screenShotData = hashMap;
@@ -17,7 +19,7 @@ public class ScreenShot {
         return className;
     }
 
-    public String getFile() {
+    public Bitmap  getFile() {
         return file;
     }
 

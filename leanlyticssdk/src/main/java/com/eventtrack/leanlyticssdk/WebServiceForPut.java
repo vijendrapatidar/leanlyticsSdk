@@ -1,6 +1,7 @@
 package com.eventtrack.leanlyticssdk;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
@@ -11,15 +12,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WebServiceForPost extends AsyncTask<String, Void, String> {
+public class WebServiceForPut extends AsyncTask<String, Void, String> {
 
-    private OnTaskDoneListener onTaskDoneListener;
     private String urlStr = "";
     private HashMap<String, Object> hm;
 
-    public WebServiceForPost(String url, HashMap<String, Object> hm, OnTaskDoneListener onTaskDoneListener) {
+    public WebServiceForPut(String url, HashMap<String, Object> hm) {
         this.urlStr = url;
-        this.onTaskDoneListener = onTaskDoneListener;
         this.hm = hm;
     }
 
@@ -30,16 +29,29 @@ public class WebServiceForPost extends AsyncTask<String, Void, String> {
             String urlParameters = getPostDataString(hm);
             byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
             int postDataLength = postData.length;
-            URL url = new URL("http://fltspc.itu.dk/widget/515318fe17450f312b00153d/");
-            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+            URL mUrl = new URL(urlStr);
+            HttpURLConnection httpConnection = (HttpURLConnection) mUrl.openConnection();
             httpConnection.setRequestMethod("PUT");
+            httpConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            httpConnection.setRequestProperty("charset", "utf-8");
+            httpConnection.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+            httpConnection.setUseCaches(false);
+            httpConnection.setConnectTimeout(100000);
+            httpConnection.setReadTimeout(100000);
             httpConnection.setDoOutput(true);
-            httpConnection.setRequestProperty("Content-Type", "application/json");
-            httpConnection.setRequestProperty("Accept", "application/json");
-            OutputStreamWriter osw = new OutputStreamWriter(httpConnection.getOutputStream());
-            osw.write(getPostDataString(hm));
-            osw.flush();
-            osw.close();
+            httpConnection.setDoInput(true);
+
+            httpConnection.connect();
+
+
+            OutputStream os = httpConnection.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(os, "UTF-8"));
+            writer.write(getPostDataString(hm));
+
+            writer.flush();
+            writer.close();
+            os.close();
             int responseCode = httpConnection.getResponseCode();
 
             if (responseCode == HttpsURLConnection.HTTP_OK) {
@@ -63,11 +75,7 @@ public class WebServiceForPost extends AsyncTask<String, Void, String> {
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-
-        if (onTaskDoneListener != null && s != null) {
-            onTaskDoneListener.onTaskDone(s);
-        } else
-            onTaskDoneListener.onError();
+        Log.e("check status", s);
     }
 
     private String getPostDataString(HashMap<String, Object> params) throws UnsupportedEncodingException {

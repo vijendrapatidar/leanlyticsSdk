@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.util.Base64;
 import android.util.Log;
 import android.view.*;
 import android.view.accessibility.AccessibilityEvent;
@@ -21,6 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URISyntaxException;
@@ -31,8 +33,9 @@ import java.util.HashMap;
 
 public class LeanlyticsAnalytics {
 
-    static String baseUrl = "http://192.168.1.137:3001/";
-    //public static String baseUrl = "http://13.56.140.11:3001/";
+    //    static String baseUrl = "http://192.168.1.137:3001/";
+    static String baseUrl = "http://52.52.170.112:3001/";
+//    public static String baseUrl = "http://13.56.140.11:3001/";
 
     private final String TAG = "Leanlytics";
     private static LeanlyticsAnalytics instance;
@@ -40,15 +43,14 @@ public class LeanlyticsAnalytics {
     private SimpleDateFormat dateFormat;
 
     private Activity mActivity;
-
-    Application application;
+    private Application application;
 
     private boolean isTimerStart = false;
     private boolean isScreenShotUpload = false;
 
     int totalTimeDuration = 0;
     int width = 0, height = 0;
-    private int screenDuration = 0;
+    int screenDuration = 0;
     private int statusBarHeight = 0;
     private int previousX = 0, previousY = 0;
 
@@ -60,23 +62,25 @@ public class LeanlyticsAnalytics {
     String deviceId = "";
     String osType = "";
     String model = "";
-    private String singleClassName = "";
+    String singleClassName = "";
 
-    private ArrayList<String> classes;
+    ArrayList<String> classes;
     private ArrayList<ScreenShot> listScreeShot;
     private ArrayList<EventDetail> listEvents;
     private ArrayList<EventDetail> list;
 
     JSONObject addressMap, locationMap;
-    JSONObject sessionObject, eventObject;
+    JSONObject sessionObject;
 
     JSONArray sessionFlowArray, eventArray;
 
     private Socket mSocket;
 
+    private final String socketUrl = "http://52.52.170.112:1010";
+
     {
         try {
-            mSocket = IO.socket(baseUrl);
+            mSocket = IO.socket(socketUrl);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -96,18 +100,16 @@ public class LeanlyticsAnalytics {
 
     public void start(final Application app, final String appId) {
         classes = new ArrayList<>();
-        addressMap = new JSONObject();
-        locationMap = new JSONObject();
-
-        sessionFlowArray = new JSONArray();
-        eventArray = new JSONArray();
-
-        sessionObject = new JSONObject();
-        eventObject = new JSONObject();
-
         listScreeShot = new ArrayList<>();
         listEvents = new ArrayList<>();
         list = new ArrayList<>();
+
+        addressMap = new JSONObject();
+        locationMap = new JSONObject();
+        sessionObject = new JSONObject();
+
+        sessionFlowArray = new JSONArray();
+        eventArray = new JSONArray();
 
         setUpSocket();
 
@@ -117,7 +119,6 @@ public class LeanlyticsAnalytics {
         @SuppressLint("HardwareIds")
         String android_id = Settings.Secure.getString(application.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
-
 
         this.deviceId = android_id;
 
@@ -144,6 +145,7 @@ public class LeanlyticsAnalytics {
             public void onAppGotoForeground() {
                 Log.e(TAG + " ffff 3", "");
                 updateOnlineStatus();
+                updateStatus(true);
                 startTime();
                 isTimerStart = true;
                 Log.e(TAG, "" + totalTimeDuration);
@@ -155,6 +157,7 @@ public class LeanlyticsAnalytics {
             public void onAppGotoBackground() {
                 Log.e(TAG + " ffff 4", "");
                 updateOfflineStatus();
+                updateStatus(false);
                 startTime();
                 isTimerStart = false;
                 endTime = dateFormat.format(new Date());
@@ -391,12 +394,40 @@ public class LeanlyticsAnalytics {
             Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
             view.destroyDrawingCache();
             view.setDrawingCacheEnabled(false);
-            store(bitmap, "" + System.currentTimeMillis());
+            //store(bitmap, "" + System.currentTimeMillis());
 
             Log.e(TAG + " bitmap", "" + bitmap);
+
+            HashMap<String, String> hm = new HashMap<>();
+            hm.put("key", appId);
+            hm.put("environment", environment);
+            hm.put("className", singleClassName);
+            hm.put("width", "" + width);
+            hm.put("height", "" + height);
+            hm.put("deviceType", deviceType);
+            hm.put("deviceId", deviceId);
+            hm.put("deviceModel", model);
+            hm.put("os", osType);
+            hm.put("filename", singleClassName + ".png");
+
+            classes.add(singleClassName);
+            listScreeShot.add(new ScreenShot(singleClassName, bitmap, hm));
+            Log.e(TAG + " upload: ", "" + listScreeShot.size() + "\n" + classes.size());
+
+            if (!isScreenShotUpload) {
+                getListScreenShot(appId);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String convert(Bitmap bitmap) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+
+        return Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
     }
 
 
@@ -426,7 +457,7 @@ public class LeanlyticsAnalytics {
                 hm.put("filename", singleClassName + ".png");
 
                 classes.add(singleClassName);
-                listScreeShot.add(new ScreenShot(singleClassName, "" + file, hm));
+                //listScreeShot.add(new ScreenShot(singleClassName, "" + file, hm));
                 Log.e(TAG + " upload: ", "" + listScreeShot.size() + "\n" + classes.size());
 
                 if (!isScreenShotUpload) {
@@ -442,6 +473,36 @@ public class LeanlyticsAnalytics {
 
     private void uploadScreenShotWithData(HashMap<String, String> hashMap, String file) {
         new ImageWebServicePost(baseUrl + "create-screenshot", hashMap, file, new OnTaskDoneListener() {
+            @Override
+            public void onTaskDone(String responseData) {
+                Log.e(TAG, "Main call");
+                try {
+                    JSONObject object = new JSONObject(responseData);
+                    if (object.getBoolean("success")) {
+                        isScreenShotUpload = false;
+                        Log.e(TAG, "before upload " + listScreeShot.size());
+                        if (listScreeShot.size() > 0) {
+                            listScreeShot.remove(listScreeShot.size() - 1);
+                            Log.e(TAG, "after upload " + listScreeShot.size());
+                            getListScreenShot(appId);
+                            getEventsScreenShot(appId);
+
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onError() {
+                Log.e(TAG, "onTaskDone: error");
+            }
+        }).execute();
+    }
+
+    private void uploadScreenShotWith(HashMap<String, String> hashMap, Bitmap bitmap) {
+        new SendImageToServer(baseUrl + "create-screenshot", hashMap, bitmap, new OnTaskDoneListener() {
             @Override
             public void onTaskDone(String responseData) {
                 Log.e(TAG, "Main call");
@@ -495,8 +556,9 @@ public class LeanlyticsAnalytics {
                                     }
                                 }
 
+                                isScreenFound = false;
                                 if (!isScreenFound) {
-                                    uploadScreenShotWithData(screenShot.getScreenShotData(), screenShot.getFile());
+                                    uploadScreenShotWith(screenShot.getScreenShotData(), screenShot.getFile());
                                 }
                             }
 
@@ -504,7 +566,7 @@ public class LeanlyticsAnalytics {
                             if (listScreeShot.size() > 0) {
                                 ScreenShot screenShot = listScreeShot.get(listScreeShot.size() - 1);
                                 listScreeShot.remove(listScreeShot.size() - 1);
-                                uploadScreenShotWithData(screenShot.getScreenShotData(), screenShot.getFile());
+                                uploadScreenShotWith(screenShot.getScreenShotData(), screenShot.getFile());
                             }
                         }
                     }
@@ -607,7 +669,8 @@ public class LeanlyticsAnalytics {
         }
     };
 
-    private Emitter updateOnlineStatus() {
+    private void updateOnlineStatus() {
+        //updateStatus(true);
         Log.e(TAG + " ffff 2", singleClassName);
         JSONObject hm = new JSONObject();
         try {
@@ -619,12 +682,13 @@ public class LeanlyticsAnalytics {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        if (mSocket.connected()) return
-                mSocket.emit("userOnline", hm);
-        return null;
+        if (mSocket.connected()) {
+            mSocket.emit("userOnline", hm);
+        }
     }
 
-    public Emitter updateOfflineStatus() {
+    private void updateOfflineStatus() {
+        //updateStatus(false);
         Log.e(TAG + " ffff 1", singleClassName);
         JSONObject hm = new JSONObject();
         try {
@@ -636,9 +700,18 @@ public class LeanlyticsAnalytics {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        if (mSocket.connected()) return
-                mSocket.emit("userOffline", hm);
-        return null;
+        if (mSocket.connected()) {
+            mSocket.emit("userOffline", hm);
+        }
+    }
+
+    private void updateStatus(Boolean status) {
+        HashMap<String, Object> hm = new HashMap<>();
+        hm.put("key", appId);
+        hm.put("isOnline", status);
+        hm.put("deviceId", deviceId);
+
+        new WebServiceForPut(baseUrl + "session", hm).execute();
     }
 
 

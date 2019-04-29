@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -37,11 +38,26 @@ public class PostTimeService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.e("ClearFromRecentService", "END");
+
         //Code here
         LeanlyticsAnalytics sdkInstance = LeanlyticsAnalytics.getInstance();
 
-        saveSession(sdkInstance.application,
-                sdkInstance.appId,
+        if(sdkInstance.classes.size() == 1){
+            try {
+                sdkInstance.sessionObject = new JSONObject();
+                sdkInstance.sessionObject.put("className", sdkInstance.singleClassName);
+                sdkInstance.sessionObject.put("screenDuration", sdkInstance.screenDuration);
+                sdkInstance.sessionObject.put("events", sdkInstance.eventArray);
+
+                sdkInstance.sessionFlowArray.put(sdkInstance.sessionObject);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Log.e(TAG+" jain", "" + sdkInstance.sessionFlowArray.length());
+
+        saveSession(sdkInstance.appId,
                 sdkInstance.environment,
                 sdkInstance.startTime,
                 sdkInstance.endTime,
@@ -68,7 +84,7 @@ public class PostTimeService extends Service {
         stopSelf();
     }
 
-    private void saveSession(Application app, String appId, String environment, String startTime, String endTime,
+    private void saveSession(String appId, String environment, String startTime, String endTime,
                              int duration, JSONArray session, JSONObject addressMap, JSONObject locationMap,
                              String deviceId, String deviceType, String os, String model, int width, int height) {
         HashMap<String, Object> hm = new HashMap<>();
