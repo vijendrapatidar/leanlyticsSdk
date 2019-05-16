@@ -1,6 +1,7 @@
 package com.eventtrack.leanlytics;
 
 import android.app.Application;
+import com.relibit.pulsemetrics.PulseAnalytics;
 
 public class App extends Application {
 
@@ -10,5 +11,8 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        PulseAnalytics.initInstance();
+        PulseAnalytics.getInstance().start(this, appId);
     }
 }
