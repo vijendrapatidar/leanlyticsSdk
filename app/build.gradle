@@ -32,6 +32,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 //    implementation 'com.github.vijendrapatidar:leanlyticsSdk:V1.1'
     //implementation project(':leanlyticssdk')
-    //implementation 'com.github.vijendrapatidar:leanlyticsSdk:1.8'
+   // implementation 'com.github.vijendrapatidar:leanlyticsSdk:1.9'
     implementation project(':pulsematrics')
 }
