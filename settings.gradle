@@ -1,1 +1,1 @@
-include ':app', ':leanlyticssdk'
+include ':app', ':leanlyticssdk', ':pulsematrics'
