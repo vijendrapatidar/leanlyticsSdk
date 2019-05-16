@@ -1,4 +1,4 @@
-package com.eventtrack.leanlytics;
+package cloud.com.mylibrary;
 
 import android.app.Application;
 import com.relibit.pulsemetrics.PulseAnalytics;

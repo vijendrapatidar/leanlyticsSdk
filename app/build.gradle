@@ -33,5 +33,4 @@ dependencies {
 //    implementation 'com.github.vijendrapatidar:leanlyticsSdk:V1.1'
     //implementation project(':leanlyticssdk')
    // implementation 'com.github.vijendrapatidar:leanlyticsSdk:1.9'
-    implementation project(':pulsematrics')
 }
