@@ -1,7 +1,7 @@
 package com.eventtrack.leanlytics;
 
 import android.app.Application;
-import com.relibit.pulsemetrics.PulseAnalytics;
+import cloud.com.testinglibrary.TestClass;
 
 public class App extends Application {
 
@@ -12,7 +12,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        PulseAnalytics.initInstance();
-        PulseAnalytics.getInstance().start(this, appId);
+        TestClass.getInstance().start(this, appId);
     }
 }
