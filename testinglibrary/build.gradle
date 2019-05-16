@@ -4,14 +4,11 @@ group='com.github.vijendrapatidar'
 
 android {
     compileSdkVersion 28
-
-
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 19
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
